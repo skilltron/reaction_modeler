@@ -1,8 +1,10 @@
 //! HTML report generator: same style as Enhanced psychiatric report, with expanded MCAS and related conditions.
 //! For research and educational use only; not for clinical diagnosis.
 
+use crate::cascade;
 use crate::inflammation::{self, InflammationReport};
 use crate::supplements;
+use crate::survival;
 use crate::AllConditionsReport;
 use std::fmt::Write;
 
@@ -48,7 +50,14 @@ const REPORT_CSS: &str = r#"
 "#;
 
 /// Build full HTML report including expanded MCAS and MCAS-related conditions (PMC8540348, SLK/Theodore's).
-pub fn all_conditions_to_html(report: &AllConditionsReport, report_title: &str, report_date: &str) -> String {
+/// Optionally include integrated cascade report and survival analysis (severe-phenotype genes).
+pub fn all_conditions_to_html(
+    report: &AllConditionsReport,
+    report_title: &str,
+    report_date: &str,
+    cascade_report: Option<&cascade::IntegratedCascadeReport>,
+    survival_analysis: Option<&survival::SurvivalAnalysis>,
+) -> String {
     let mcas_refs = inflammation::mcas_mastocytosis_ref();
     let slk_ref = inflammation::slk_theodores_ref();
 
@@ -69,6 +78,12 @@ pub fn all_conditions_to_html(report: &AllConditionsReport, report_title: &str, 
     out.push_str("<div class=\"nav-tab\" onclick=\"showSection('sulfur')\">Sulfur</div>\n");
     out.push_str("<div class=\"nav-tab\" onclick=\"showSection('rare')\">Rare</div>\n");
     out.push_str("<div class=\"nav-tab\" onclick=\"showSection('supplements')\">Supplements</div>\n");
+    if cascade_report.is_some() {
+        out.push_str("<div class=\"nav-tab\" onclick=\"showSection('cascade')\">Cascade</div>\n");
+    }
+    if survival_analysis.is_some() {
+        out.push_str("<div class=\"nav-tab\" onclick=\"showSection('survival')\">Survival</div>\n");
+    }
     out.push_str("<div class=\"nav-tab\" onclick=\"showSection('disclaimer')\">Disclaimer</div>\n</div>\n\n");
 
     // MCAS & related (active)
@@ -253,6 +268,39 @@ pub fn all_conditions_to_html(report: &AllConditionsReport, report_title: &str, 
         out.push_str("</p>\n</div>\n");
     }
     out.push_str("</div>\n\n");
+
+    if let Some(cr) = cascade_report {
+        out.push_str("<!-- Integrated Cascade -->\n<div id=\"cascade\" class=\"content-section\">\n<h2>Integrated cascade summary</h2>\n<p>Genotype-driven scores and pathway ranking. Phenotype can refine. For research only.</p>\n");
+        out.push_str("<h3>Scores (0–100)</h3>\n<ul>");
+        let s = &cr.scores;
+        out.push_str(&format!("<li>Calcium/mast cell sensitivity: {} ({:?})</li>", s.calcium_mast_cell_sensitivity, s.band("calcium_mast_cell_sensitivity")));
+        out.push_str(&format!("<li>Trigeminal/calcium excitability: {} ({:?})</li>", s.trigeminal_calcium_excitability, s.band("trigeminal_calcium_excitability")));
+        out.push_str(&format!("<li>Sulfur burden likelihood: {} ({:?})</li>", s.sulfur_burden_likelihood, s.band("sulfur_burden_likelihood")));
+        out.push_str(&format!("<li>Composite CGRP cascade: {} ({:?})</li>", s.composite_cgrp_runaway_cascade, s.band("composite_cgrp_runaway_cascade")));
+        out.push_str("</ul>\n<h3>Primary drivers</h3>\n<ol>");
+        for d in &cr.ranking.primary_drivers {
+            out.push_str("<li>"); out.push_str(&escape(d)); out.push_str("</li>");
+        }
+        out.push_str("</ol>\n<h3>Suspected buildup / clearance</h3>\n");
+        for b in &cr.suspected_buildups {
+            out.push_str("<div class=\"condition-card\"><h4>"); out.push_str(&escape(&b.category)); out.push_str("</h4>\n<p>"); out.push_str(&escape(&b.why_may_accumulate)); out.push_str("</p>\n<p><strong>Clearance:</strong> "); out.push_str(&escape(&b.clearance_category)); out.push_str("</p></div>\n");
+        }
+        out.push_str("</div>\n\n");
+    }
+
+    if let Some(sa) = survival_analysis {
+        out.push_str("<!-- Survival analysis -->\n<div id=\"survival\" class=\"content-section\">\n<h2>Severe-phenotype genes: possible reasons for mild or survivable outcome</h2>\n<p>"); out.push_str(&escape(&sa.summary)); out.push_str("</p>\n");
+        for gene in &sa.genes_with_severe_phenotype {
+            if let Some(ref r) = sa.by_gene.get(gene) {
+                out.push_str("<div class=\"condition-card\">\n<h3>"); out.push_str(&escape(&r.gene)); out.push_str(" — "); out.push_str(&escape(&r.condition)); out.push_str("</h3>\n<p>"); out.push_str(&escape(&r.typical_severity)); out.push_str("</p>\n<h4>Possible reasons for mild or survival</h4>\n<ul>");
+                for reason in &r.reasons_for_mild_or_survival {
+                    out.push_str("<li><strong>"); out.push_str(&escape(&reason.reason)); out.push_str(":</strong> "); out.push_str(&escape(&reason.explanation)); out.push_str("</li>");
+                }
+                out.push_str("</ul>\n</div>\n");
+            }
+        }
+        out.push_str("</div>\n\n");
+    }
 
     // Disclaimer
     out.push_str("<!-- Disclaimer -->\n<div id=\"disclaimer\" class=\"content-section\">\n<h2>Disclaimer</h2>\n<p>For research and educational use only. Not for clinical diagnosis. Gene associations are from published literature (e.g. PMC8540348, GeneReviews, OMIM); presence of variants does not establish diagnosis or indicate causation. Consult a qualified clinician for medical decisions.</p>\n</div>\n\n");

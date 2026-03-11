@@ -6,7 +6,7 @@
 //! If one arg: read from file, write HTML to stdout.
 //! If two args: read from first file, write HTML to second file.
 
-use genetic_conditions::{check_variants_against_all, html_report, VariantInput};
+use genetic_conditions::{cascade, check_variants_against_all, html_report, survival, VariantInput};
 use std::env;
 use std::io::{self, BufReader, Read, Write};
 
@@ -42,9 +42,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let variants: Vec<VariantInput> = serde_json::from_str(&raw)?;
 
     let report = check_variants_against_all(&variants);
+    let cascade_report = cascade::compute_cascade_from_report(&report);
+    let survival_analysis = survival::analyze_survival(&variants);
     let report_date = chrono::Local::now().format("%Y-%m-%d").to_string();
     let title = "Genetic Conditions Report (MCAS & related expanded)";
-    let html = html_report::all_conditions_to_html(&report, title, &report_date);
+    let html = html_report::all_conditions_to_html(
+        &report,
+        title,
+        &report_date,
+        Some(&cascade_report),
+        Some(&survival_analysis),
+    );
 
     if let Some(path) = out_path {
         std::fs::write(path, html)?;

@@ -7,6 +7,7 @@
 mod variant_input;
 pub use variant_input::{RegionType, VariantInput};
 
+pub mod cascade;
 pub mod immune;
 pub mod exposure;
 pub mod inflammation;
@@ -14,6 +15,7 @@ pub mod html_report;
 pub mod sulfur;
 pub mod rare;
 pub mod supplements;
+pub mod survival;
 
 use serde::{Deserialize, Serialize};
 
@@ -98,6 +100,8 @@ mod tests {
             &report,
             "Test Report",
             "2025-01-01",
+            None,
+            None,
         );
         assert!(html.contains("MCAS"));
         assert!(html.contains("Cromolyn"));
@@ -114,5 +118,57 @@ mod tests {
         let supps = supplements::supplements_for_weak_areas();
         assert!(supps.len() <= 8);
         assert!(supps.len() >= 7);
+    }
+
+    #[test]
+    fn cascade_from_report() {
+        let variants: Vec<VariantInput> = vec![];
+        let report = check_variants_against_all(&variants);
+        let cr = cascade::compute_cascade_from_report(&report);
+        assert!(cr.scores.composite_cgrp_runaway_cascade <= 100);
+        assert!(!cr.ranking.primary_drivers.is_empty());
+        assert!(!cr.suspected_buildups.is_empty());
+        assert!(!cr.clearance_needs.is_empty());
+    }
+
+    #[test]
+    fn survival_analysis_empty() {
+        let variants: Vec<VariantInput> = vec![];
+        let sa = survival::analyze_survival(&variants);
+        assert!(sa.genes_with_severe_phenotype.is_empty());
+        assert!(sa.summary.contains("No variants"));
+    }
+
+    #[test]
+    fn survival_analysis_col1a1() {
+        let variants = vec![
+            VariantInput {
+                chromosome: "17".to_string(),
+                position: 48_212_000,
+                gene: Some("COL1A1".to_string()),
+                rsid: None,
+                ref_allele: None,
+                alt_allele: None,
+                region_type: None,
+            },
+        ];
+        let sa = survival::analyze_survival(&variants);
+        assert!(sa.genes_with_severe_phenotype.iter().any(|g| g == "COL1A1"));
+        assert!(sa.by_gene.contains_key("COL1A1"));
+        let r = sa.by_gene.get("COL1A1").unwrap();
+        assert!(r.condition.contains("Osteogenesis"));
+        assert!(r.reasons_for_mild_or_survival.iter().any(|x| x.reason.contains("Incomplete") || x.reason.contains("mild")));
+    }
+
+    #[test]
+    fn html_with_cascade_and_survival() {
+        let variants: Vec<VariantInput> = vec![];
+        let report = check_variants_against_all(&variants);
+        let cr = cascade::compute_cascade_from_report(&report);
+        let sa = survival::analyze_survival(&variants);
+        let html = html_report::all_conditions_to_html(&report, "Test", "2025-01-01", Some(&cr), Some(&sa));
+        assert!(html.contains("Cascade"));
+        assert!(html.contains("Survival"));
+        assert!(html.contains("Scores (0–100)"));
     }
 }
