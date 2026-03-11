@@ -9,6 +9,7 @@
 use genetic_conditions::{cascade, check_variants_against_all, html_report, survival, VariantInput};
 use std::env;
 use std::io::{self, BufReader, Read, Write};
+use std::process::Command;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
@@ -56,6 +57,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     if let Some(path) = out_path {
         std::fs::write(path, html)?;
+        #[cfg(target_os = "macos")]
+        let _ = Command::new("open").arg(path).status();
+        #[cfg(target_os = "windows")]
+        let _ = Command::new("cmd").args(["/C", "start", "", path]).status();
+        #[cfg(all(unix, not(target_os = "macos")))]
+        let _ = Command::new("xdg-open").arg(path).status();
     } else {
         io::stdout().write_all(html.as_bytes())?;
     }

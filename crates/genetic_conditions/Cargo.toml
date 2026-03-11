@@ -14,7 +14,16 @@ path = "src/lib.rs"
 name = "genetic-report-html"
 path = "src/bin/report_html.rs"
 
+[[bin]]
+name = "compare-variant-sources"
+path = "src/bin/compare_variant_sources.rs"
+
+[[bin]]
+name = "vcf-to-variants"
+path = "src/bin/vcf_to_variants.rs"
+
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 chrono = "0.4"
+flate2 = "1.0"
