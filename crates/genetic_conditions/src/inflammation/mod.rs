@@ -5,7 +5,7 @@ mod report;
 mod slk;
 
 pub use mcas::{
-    MastCellDisorderKind, MastCellDisorderRef, McasStabilizer,
+    has_kit_d816v, MastCellDisorderKind, MastCellDisorderRef, McasStabilizer,
     mcas_mastocytosis_ref, mcas_recommended_combo_with_cromolyn, mcas_stabilizers_ref,
 };
 pub use report::{check_variants_against_inflammation, InflammationFinding, InflammationReport};

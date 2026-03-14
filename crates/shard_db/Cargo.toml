@@ -1,0 +1,14 @@
+[package]
+name = "shard_db"
+version = "0.1.0"
+edition = "2021"
+description = "Partitioned shard database for variants (MDNG-compatible); O(1) lookup, merge/append, genomic order."
+
+[[bin]]
+name = "combine-to-mdng"
+path = "src/bin/combine_to_mdng.rs"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+flate2 = "1.0"

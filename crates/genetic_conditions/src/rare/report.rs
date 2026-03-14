@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
-use crate::variant_input::{RegionType, VariantInput};
+use crate::variant_input::{is_pathogenic_or_likely_pathogenic, RegionType, VariantInput};
 use super::diseases::list_rare_genetic_diseases;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -37,24 +37,34 @@ pub fn check_variants_against_rare_diseases(variants: &[VariantInput]) -> Vec<Ra
     let mut reports = Vec::with_capacity(diseases.len());
     for d in &diseases {
         let gene_set: HashSet<String> = d.genes.iter().map(|g| g.to_uppercase()).collect();
+        let mut seen = HashSet::new();
         let mut findings = Vec::with_capacity(variants.len());
         for v in variants {
             let gene = match &v.gene {
                 Some(g) => g.to_uppercase(),
                 None => continue,
             };
-            if gene_set.contains(&gene) {
-                let region_note = v.region_type.map(|r| format!(" Region: {}.", r.as_str())).unwrap_or_default();
-                findings.push(RareDiseaseFinding {
-                    disease_name: d.name.clone(),
-                    gene: gene.clone(),
-                    variant: v.clone(),
-                    reference_allele: v.ref_allele.clone(),
-                    alternate_allele: v.alt_allele.clone(),
-                    region_type: v.region_type,
-                    note: format!("Variant in {} ({});{}", gene, d.name, region_note),
-                });
+            if !gene_set.contains(&gene) {
+                continue;
             }
+            if !is_pathogenic_or_likely_pathogenic(v) {
+                continue;
+            }
+            let key = v.dedup_key();
+            if seen.contains(&key) {
+                continue;
+            }
+            seen.insert(key);
+            let region_note = v.region_type.map(|r| format!(" Region: {}.", r.as_str())).unwrap_or_default();
+            findings.push(RareDiseaseFinding {
+                disease_name: d.name.clone(),
+                gene: gene.clone(),
+                variant: v.clone(),
+                reference_allele: v.ref_allele.clone(),
+                alternate_allele: v.alt_allele.clone(),
+                region_type: v.region_type,
+                note: format!("Variant in {} ({});{}", gene, d.name, region_note),
+            });
         }
         reports.push(RareDiseaseReport {
             disease_name: d.name.clone(),

@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/genetic_conditions"]
+members = ["crates/genetic_conditions", "crates/shard_db"]
 
 [profile.release]
 opt-level = 3

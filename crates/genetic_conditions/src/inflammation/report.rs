@@ -3,8 +3,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
-use crate::variant_input::{RegionType, VariantInput};
-use super::mcas::mcas_mastocytosis_ref;
+use crate::variant_input::{is_pathogenic_or_likely_pathogenic, RegionType, VariantInput};
+use super::mcas::{mcas_mastocytosis_ref, variant_is_kit_d816v};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InflammationFinding {
@@ -37,24 +37,34 @@ pub fn check_variants_against_inflammation(variants: &[VariantInput]) -> Vec<Inf
     let mut reports = Vec::with_capacity(disorders.len());
     for d in &disorders {
         let gene_set: HashSet<String> = d.genes.iter().map(|g| g.to_uppercase()).collect();
+        let mut seen = HashSet::new();
         let mut findings = Vec::with_capacity(variants.len());
         for v in variants {
             let gene = match &v.gene {
                 Some(g) => g.to_uppercase(),
                 None => continue,
             };
-            if gene_set.contains(&gene) {
-                let region_note = v.region_type.map(|r| format!(" Region: {}.", r.as_str())).unwrap_or_default();
-                findings.push(InflammationFinding {
-                    condition_name: d.name.clone(),
-                    gene: gene.clone(),
-                    variant: v.clone(),
-                    reference_allele: v.ref_allele.clone(),
-                    alternate_allele: v.alt_allele.clone(),
-                    region_type: v.region_type,
-                    note: format!("Variant in {} ({});{}", gene, d.name, region_note),
-                });
+            if !gene_set.contains(&gene) {
+                continue;
             }
+            if !is_pathogenic_or_likely_pathogenic(v) && !variant_is_kit_d816v(v) {
+                continue;
+            }
+            let key = v.dedup_key();
+            if seen.contains(&key) {
+                continue;
+            }
+            seen.insert(key);
+            let region_note = v.region_type.map(|r| format!(" Region: {}.", r.as_str())).unwrap_or_default();
+            findings.push(InflammationFinding {
+                condition_name: d.name.clone(),
+                gene: gene.clone(),
+                variant: v.clone(),
+                reference_allele: v.ref_allele.clone(),
+                alternate_allele: v.alt_allele.clone(),
+                region_type: v.region_type,
+                note: format!("Variant in {} ({});{}", gene, d.name, region_note),
+            });
         }
         reports.push(InflammationReport {
             condition_name: d.name.clone(),

@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
-use crate::variant_input::{RegionType, VariantInput};
+use crate::variant_input::{is_pathogenic_or_likely_pathogenic, RegionType, VariantInput};
 use super::diseases::{list_immune_diseases, EvidenceLevel, ImmuneDiseaseRef};
 
 /// One variant finding: includes normal (reference) and change (alternate), and region type (coding vs non-coding) when available.
@@ -52,30 +52,40 @@ pub fn check_variants_against_immune_diseases(variants: &[VariantInput]) -> Vec<
 
 fn build_report_for_disease(disease: &ImmuneDiseaseRef, variants: &[VariantInput]) -> ImmuneDiseaseReport {
     let gene_set: HashSet<String> = disease.genes.iter().map(|g| g.to_uppercase()).collect();
+    let mut seen = HashSet::new();
     let mut findings = Vec::with_capacity(variants.len());
     for v in variants {
         let gene = match &v.gene {
             Some(g) => g.to_uppercase(),
             None => continue,
         };
-        if gene_set.contains(&gene) {
-            findings.push(ImmuneDiseaseFinding {
-                disease_name: disease.name.clone(),
-                genetic_cause_indicated: disease.genetic_cause_indicated,
-                evidence_level: disease.evidence_level,
-                gene: gene.clone(),
-                variant: v.clone(),
-                reference_allele: v.ref_allele.clone(),
-                alternate_allele: v.alt_allele.clone(),
-                region_type: v.region_type,
-                note: format!(
-                    "Variant in {} ({}); genetic cause/susceptibility well-established. {}",
-                    gene,
-                    disease.name,
-                    v.region_type.map(|r| format!("Region: {}.", r.as_str())).unwrap_or_else(|| "Region: unknown.".to_string())
-                ),
-            });
+        if !gene_set.contains(&gene) {
+            continue;
         }
+        if !is_pathogenic_or_likely_pathogenic(v) {
+            continue;
+        }
+        let key = v.dedup_key();
+        if seen.contains(&key) {
+            continue;
+        }
+        seen.insert(key);
+        findings.push(ImmuneDiseaseFinding {
+            disease_name: disease.name.clone(),
+            genetic_cause_indicated: disease.genetic_cause_indicated,
+            evidence_level: disease.evidence_level,
+            gene: gene.clone(),
+            variant: v.clone(),
+            reference_allele: v.ref_allele.clone(),
+            alternate_allele: v.alt_allele.clone(),
+            region_type: v.region_type,
+            note: format!(
+                "Variant in {} ({}); genetic cause/susceptibility well-established. {}",
+                gene,
+                disease.name,
+                v.region_type.map(|r| format!("Region: {}.", r.as_str())).unwrap_or_else(|| "Region: unknown.".to_string())
+            ),
+        });
     }
     ImmuneDiseaseReport {
         disease_name: disease.name.clone(),

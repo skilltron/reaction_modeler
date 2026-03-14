@@ -22,8 +22,33 @@ path = "src/bin/compare_variant_sources.rs"
 name = "vcf-to-variants"
 path = "src/bin/vcf_to_variants.rs"
 
+[[bin]]
+name = "assess-run"
+path = "src/bin/assess_run.rs"
+
+[[bin]]
+name = "mdng-to-variants"
+path = "src/bin/mdng_to_variants.rs"
+
+[[bin]]
+name = "fastq-to-variants"
+path = "src/bin/fastq_to_variants.rs"
+
+[[bin]]
+name = "txt-to-variants"
+path = "src/bin/txt_to_variants.rs"
+
+[[bin]]
+name = "proof-report"
+path = "src/bin/proof_report.rs"
+
+[[bin]]
+name = "verify-mcas"
+path = "src/bin/verify_mcas.rs"
+
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 chrono = "0.4"
 flate2 = "1.0"
+shard_db = { path = "../shard_db" }

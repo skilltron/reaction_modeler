@@ -21,8 +21,10 @@ pub struct SevereGeneRef {
 }
 
 /// Known genes with severe/lethal classic phenotypes and explanations for milder outcomes.
+/// Osteogenesis imperfecta (OI) has many associated genes; we list the main ones so variants in any can be flagged and explained.
 pub fn severe_phenotype_reference() -> Vec<SevereGeneRef> {
     vec![
+        // Osteogenesis imperfecta (OI) — type I–XVII; many genes
         SevereGeneRef {
             gene: "COL1A1".to_string(),
             condition: "Osteogenesis imperfecta (OI)".to_string(),
@@ -54,6 +56,94 @@ pub fn severe_phenotype_reference() -> Vec<SevereGeneRef> {
                 SurvivalReason {
                     reason: "Modifier genes".to_string(),
                     explanation: "Genetic background can soften bone phenotype.".to_string(),
+                },
+            ],
+        },
+        SevereGeneRef {
+            gene: "CRTAP".to_string(),
+            condition: "Osteogenesis imperfecta (OI)".to_string(),
+            typical_severity: "Type VII OI; severe to lethal; collagen prolyl 3-hydroxylation.".to_string(),
+            reasons_for_mild_or_survival: vec![
+                SurvivalReason {
+                    reason: "Residual activity or hypomorphic allele".to_string(),
+                    explanation: "Some variants allow partial 3-hydroxylation; phenotype can be moderate.".to_string(),
+                },
+            ],
+        },
+        SevereGeneRef {
+            gene: "LEPRE1".to_string(),
+            condition: "Osteogenesis imperfecta (OI)".to_string(),
+            typical_severity: "Type VIII OI (P3H1); often severe.".to_string(),
+            reasons_for_mild_or_survival: vec![
+                SurvivalReason {
+                    reason: "Hypomorphic allele".to_string(),
+                    explanation: "Residual P3H1 function can attenuate severity.".to_string(),
+                },
+            ],
+        },
+        SevereGeneRef {
+            gene: "FKBP10".to_string(),
+            condition: "Osteogenesis imperfecta (OI)".to_string(),
+            typical_severity: "Type XI OI; bone fragility, often with Bruck syndrome overlap.".to_string(),
+            reasons_for_mild_or_survival: vec![
+                SurvivalReason {
+                    reason: "Mild allele".to_string(),
+                    explanation: "Some FKBP10 variants are associated with less severe bone phenotype.".to_string(),
+                },
+            ],
+        },
+        SevereGeneRef {
+            gene: "SERPINH1".to_string(),
+            condition: "Osteogenesis imperfecta (OI)".to_string(),
+            typical_severity: "Type X OI; HSP47 collagen chaperone; can be severe.".to_string(),
+            reasons_for_mild_or_survival: vec![
+                SurvivalReason {
+                    reason: "Residual chaperone function".to_string(),
+                    explanation: "Hypomorphic variants may allow some collagen folding.".to_string(),
+                },
+            ],
+        },
+        SevereGeneRef {
+            gene: "SP7".to_string(),
+            condition: "Osteogenesis imperfecta (OI)".to_string(),
+            typical_severity: "Type XII OI (osteoblast transcription factor); variable.".to_string(),
+            reasons_for_mild_or_survival: vec![
+                SurvivalReason {
+                    reason: "Variable expressivity".to_string(),
+                    explanation: "SP7-related OI shows a range of severity.".to_string(),
+                },
+            ],
+        },
+        SevereGeneRef {
+            gene: "BMP1".to_string(),
+            condition: "Osteogenesis imperfecta (OI)".to_string(),
+            typical_severity: "Type XIII OI; procollagen C-proteinase; variable.".to_string(),
+            reasons_for_mild_or_survival: vec![
+                SurvivalReason {
+                    reason: "Residual processing".to_string(),
+                    explanation: "Some BMP1 variants permit partial collagen processing.".to_string(),
+                },
+            ],
+        },
+        SevereGeneRef {
+            gene: "TMEM38B".to_string(),
+            condition: "Osteogenesis imperfecta (OI)".to_string(),
+            typical_severity: "Type XIV OI; ER calcium channel; variable.".to_string(),
+            reasons_for_mild_or_survival: vec![
+                SurvivalReason {
+                    reason: "Variable expressivity".to_string(),
+                    explanation: "Phenotype ranges from mild to moderate.".to_string(),
+                },
+            ],
+        },
+        SevereGeneRef {
+            gene: "IFITM5".to_string(),
+            condition: "Osteogenesis imperfecta (OI)".to_string(),
+            typical_severity: "Type V OI; hyperplastic callus; dominant.".to_string(),
+            reasons_for_mild_or_survival: vec![
+                SurvivalReason {
+                    reason: "Type V often non-lethal".to_string(),
+                    explanation: "Type V OI is typically compatible with survival; severity varies.".to_string(),
                 },
             ],
         },

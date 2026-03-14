@@ -97,6 +97,7 @@ dependencies = [
  "flate2",
  "serde",
  "serde_json",
+ "shard_db",
 ]
 
 [[package]]
@@ -247,6 +248,15 @@ dependencies = [
  "serde",
  "serde_core",
  "zmij",
+]
+
+[[package]]
+name = "shard_db"
+version = "0.1.0"
+dependencies = [
+ "flate2",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
