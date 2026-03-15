@@ -158,3 +158,13 @@ When the report shows the wrong person’s data, use **intercept** to see the va
 | Mitigation | All scripts that invoke genetic-report-html now set **GENETIC_REPORT_INPUT_FILE** to the path they intend, so the binary ignores args[1] for reading and uses that path only. Stderr logs “INPUT SOURCE: GENETIC_REPORT_INPUT_FILE -> path” or “args[1] -> path” so you can confirm which file was used. |
 
 **Conclusion:** The only way the main report shows Henry’s data when generating for Lisa is (1) the path used for reading pointed to Henry’s file, or (2) the user is viewing an old/cached report or ran a different command, or (3) the “Lisa” input file was built from Henry’s data. There is no in-process mixing or caching of two people’s variant sets in the report binary or HTML layer.
+
+---
+
+## 8. Genetic reports (plain text)
+
+**Script:** `scripts/run-all-reports-to-desktop-and-open.sh` writes one plain-text report per person to `~/Desktop/GeneticReports/` (or a path you pass as first arg). Each file shows Report name, Dataset fingerprint, ClinVar status, DATA ALIGNMENT block, MCAS section, and other-section counts.
+
+- **ClinVar:** Pathogenic/likely pathogenic findings require a ClinVar index. The script automatically uses `Gene_Forager/resources/clinvar_index_by_rsid.json` if that file exists; otherwise set `CLINVAR_INDEX_PATH` to your index path. The report header says "ClinVar: used" or "ClinVar: NOT USED" so you know which case applied.
+- **Duplicate data check:** After generating, the script compares the "Dataset:" line of each report. If two reports have the same Dataset, they used the same variant input (e.g. identical source files for Michael and Elisabeth). The script prints a WARNING and which files share data.
+- **Identity:** Report and Dataset at the top of each `.txt` file identify the run; no browser cache. Use DATA ALIGNMENT to confirm variant count and first/last chr:pos match the intended input.

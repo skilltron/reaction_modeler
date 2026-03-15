@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 # Generate all 6 reports as PLAIN TEXT into ~/Desktop/GeneticReports/ (no HTML/browser until fixed).
+#
+# Optional: pathogenic/likely pathogenic findings. Set CLINVAR_INDEX_PATH to a JSON index
+# (rsID -> { classification, review_status, conditions, ... }). If you have
+# Gene_Forager/resources/clinvar_index_by_rsid.json, the script will use it when present.
+# Otherwise reports show "ClinVar: NOT USED" and section counts may be 0.
+#
+# At the end the script checks for duplicate "Dataset:" lines; if two reports share the same
+# Dataset, they used the same variant data (e.g. Michael/Elisabeth same source file).
 set -e
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
@@ -9,6 +17,13 @@ HEALTH="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Health"
 DOWNLOADS="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Downloads"
 export NO_BROWSER_OPEN=1
 export GENETIC_REPORT_PLAIN_TEXT=1
+
+# Use ClinVar index if present (so pathogenic/likely pathogenic findings can appear)
+CLINVAR_CANDIDATE="$REPO_ROOT/Gene_Forager/resources/clinvar_index_by_rsid.json"
+if [ -f "$CLINVAR_CANDIDATE" ]; then
+  export CLINVAR_INDEX_PATH="$CLINVAR_CANDIDATE"
+  echo "Using ClinVar index: $CLINVAR_INDEX_PATH"
+fi
 
 echo "Writing all reports as PLAIN TEXT to $OUT_DIR."
 
